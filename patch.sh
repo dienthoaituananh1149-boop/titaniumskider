@@ -41,7 +41,10 @@ feature_overrides.EnableFeature(features::kUserMediaScreenCapturing);\
 feature_overrides.EnableFeature(media::kAndroidEnableBackgroundMediaCapturing);\
 feature_overrides.EnableFeature(media::kAutoPictureInPictureAndroid);\
 feature_overrides.EnableFeature(media::kContextMenuPictureInPictureAndroid);\
-feature_overrides.EnableFeature(chrome::android::kLoadAllTabsAtStartup);\
+feature_overrides.EnableFeature(features::kCanvasOopRasterization);\
+feature_overrides.EnableFeature(features::kProcessPerSiteUpToLimit);\
+feature_overrides.EnableFeature(features::kBackForwardCache);\
+feature_overrides.EnableFeature(media::kUseGpuMemoryBufferVideoFrames);\
 feature_overrides.EnableFeature(chrome::android::kChromeNativeUrlOverriding);\
 #if 0
 d}' chrome/browser/chrome_browser_field_trials.cc
@@ -52,7 +55,8 @@ sed -i 's|ChromeAccessibilityUtil.get().isAccessibilityEnabled()|org.chromium.ui
 sed -i 's|AccessibilityState.isPerformGesturesEnabled()|(AccessibilityState.isComplexUserInteractionServiceEnabled() \|\| AccessibilityState.isTouchExplorationEnabled())|' chrome/browser/ui/messages/android/java/src/org/chromium/chrome/browser/ui/messages/snackbar/SnackbarManager.java
 
 # dev
-# sed -i '0,/modelList.add(buildSettingsItem());/s//modelList.add(mMoreToolsItemBuilder.buildTaskManagerItem());modelList.add(mMoreToolsItemBuilder.buildDevToolsItem());&/' chrome/android/java/src/org/chromium/chrome/browser/tabbed_mode/TabbedAppMenuPropertiesDelegate.java
+sed -i '0,/modelList.add(buildSettingsItem());/s//modelList.add(mMoreToolsItemBuilder.buildTaskManagerItem());modelList.add(mMoreToolsItemBuilder.buildDevToolsItem());&/' chrome/android/java/src/org/chromium/chrome/browser/tabbed_mode/TabbedAppMenuPropertiesDelegate.java
+sed -i 's|case KeyEvent.KEYCODE_F|case KeyEvent.KEYCODE_F12: DevToolsWindowAndroid.openDevTools(tab.getWebContents()); return true; case KeyEvent.KEYCODE_F|' chrome/android/java/src/org/chromium/chrome/browser/KeyboardShortcuts.java
 sed -i '/BASE_FEATURE(kTaskManagerClank,/,/);/ s/base::FEATURE_DISABLED_BY_DEFAULT/base::FEATURE_ENABLED_BY_DEFAULT/' chrome/browser/task_manager/common/task_manager_features.cc
 if version_lt "$VERSION" "156.0.8060.0"; then
 sed -i 's|!DeviceFormFactor.isNonMultiDisplayContextOnTablet(mContext)|(false \&\& &)|' chrome/android/java/src/org/chromium/chrome/browser/tabbed_mode/MoreToolsItemBuilder.java
