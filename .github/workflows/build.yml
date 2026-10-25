@@ -7,7 +7,7 @@ on:
         description: 'Runner'
         required: true
         type: string
-        default: 'self-hosted' # ubuntu-latest
+        default: 'ubuntu-latest' # self-hosted
   schedule:
     - cron: '0 0 */16 * *'
 
@@ -18,8 +18,17 @@ permissions:
 
 jobs:
   build:
-    runs-on: ${{ github.event_name == 'workflow_dispatch' && inputs.runner || 'self-hosted' }}
+    runs-on: ${{ github.event_name == 'workflow_dispatch' && inputs.runner || 'ubuntu-latest' }}
     steps:
+      - name: Free Disk Space
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
+          sudo docker image prune --all --force || true
+          df -h
+
       - uses: actions/checkout@v5
         with:
           submodules: true
@@ -52,12 +61,12 @@ jobs:
           ./build.sh
 
       - name: Set
-        run: |
-          export VERSION=$(find chromium/src/out/release -name '*arm64-v8a.apk' | sed 's/.*\///;s/\-arm64-v8a.apk$//')
+        run: | 
+          export APK_FILE=$(find chromium/src/out/release -name '*arm64-v8a.apk' | head -n 1)
+          export VERSION=$(basename "$APK_FILE" | sed 's/-arm64-v8a.apk//')
           echo "VERSION=$VERSION" >> $GITHUB_ENV
-          mv $(find chromium/src/out/release -name '*arm64-v8a.aab') $VERSION-${{ env.unix_time }}-arm64-v8a.aab
-          mv $(find chromium/src/out/release -name '*arm64-v8a.apk') $VERSION-${{ env.unix_time }}-arm64-v8a.apk
-          mv $(find chromium/src/out/release -name '*armeabi-v7a.apk') $VERSION-${{ env.unix_time }}-armeabi-v7a.apk
+          mv $(find chromium/src/out/release -name '*arm64-v8a.aab') ${VERSION}-${{ env.unix_time }}-arm64-v8a.aab
+          mv "$APK_FILE" ${VERSION}-${{ env.unix_time }}-arm64-v8a.apk
 
       - name: Publish
         uses: softprops/action-gh-release@v2
@@ -68,7 +77,6 @@ jobs:
           files: |
             ${{ env.VERSION }}-${{ env.unix_time }}-arm64-v8a.aab
             ${{ env.VERSION }}-${{ env.unix_time }}-arm64-v8a.apk
-            ${{ env.VERSION }}-${{ env.unix_time }}-armeabi-v7a.apk
 
       - name: Attest
         uses: actions/attest-build-provenance@v4
@@ -76,4 +84,3 @@ jobs:
           subject-path: |
             ${{ env.VERSION }}-${{ env.unix_time }}-arm64-v8a.aab
             ${{ env.VERSION }}-${{ env.unix_time }}-arm64-v8a.apk
-            ${{ env.VERSION }}-${{ env.unix_time }}-armeabi-v7a.apk

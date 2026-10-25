@@ -13,8 +13,8 @@ export PATH="$PWD/depot_tools:$PATH"
 mkdir -p chromium/src/out/Default; cd chromium/src
 git init
 git remote add origin $CHROMIUM_SOURCE
-git fetch --depth 1 $CHROMIUM_SOURCE +refs/tags/$VERSION:chromium_$VERSION
-git checkout $VERSION
+git fetch --depth 1 $CHROMIUM_SOURCE refs/tags/$VERSION:refs/tags/$VERSION
+git checkout refs/tags/$VERSION
 cp $SCRIPT_DIR/.gclient ../.gclient
 
 # https://grapheneos.org/build#browser-and-webview
@@ -40,10 +40,7 @@ echo "Generating ninja build files..."
 gn gen out/Default || exit 1
 mkdir -p out/tmp out/release
 
-autoninja -C out/Default chrome_public_apk
-mv $(find out/Default/apks -name 'Chrome*.apk') out/tmp/$VERSION-armeabi-v7a.apk
-sed -i 's/target_cpu = "arm"/target_cpu = "arm64"/' out/Default/args.gn
-gn gen out/Default || exit 1
+echo "Building chrome_public_apk and chrome_public_bundle for arm64-v8a..."
 autoninja -C out/Default chrome_public_apk chrome_public_bundle
 mv $(find out/Default/apks -name 'Chrome*.apk') out/tmp/$VERSION-arm64-v8a.apk
 mv $(find out/Default/apks -name 'Chrome*.aab') out/tmp/$VERSION-arm64-v8a.aab
@@ -51,12 +48,10 @@ mv $(find out/Default/apks -name 'Chrome*.aab') out/tmp/$VERSION-arm64-v8a.aab
 export PATH=$PWD/third_party/jdk/current/bin/:$PATH
 export ANDROID_HOME=$PWD/third_party/android_sdk/public
 if [ -f "$SCRIPT_DIR/keys/test.jks" ]; then
-    sign_apk out/tmp/$VERSION-armeabi-v7a.apk out/release/$VERSION-armeabi-v7a.apk
     sign_apk out/tmp/$VERSION-arm64-v8a.apk out/release/$VERSION-arm64-v8a.apk
     sign_aab out/tmp/$VERSION-arm64-v8a.aab out/release/$VERSION-arm64-v8a.aab
 else
     echo "No signing keys provided, copying unsigned APKs to release..."
-    cp out/tmp/$VERSION-armeabi-v7a.apk out/release/$VERSION-armeabi-v7a.apk
     cp out/tmp/$VERSION-arm64-v8a.apk out/release/$VERSION-arm64-v8a.apk
     cp out/tmp/$VERSION-arm64-v8a.aab out/release/$VERSION-arm64-v8a.aab
 fi
