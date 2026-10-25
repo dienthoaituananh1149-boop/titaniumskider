@@ -9,10 +9,7 @@ is_official_build = true
 is_component_build = false
 is_debug = false
 symbol_level = 0
-strip_debug_info = true
-android_strip_debug = true
 thin_lto_enable_optimizations = true
-chrome_pgo_phase = 2
 
 # Linker & Toolchain
 use_siso = true
